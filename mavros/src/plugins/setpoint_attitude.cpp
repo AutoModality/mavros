@@ -113,6 +113,9 @@ private:
 	double tf_rate;
 	bool reverse_throttle;
 
+	float throttle = 0;
+
+
 	/* -*- low-level send -*- */
 
 	void set_attitude_target(uint32_t time_boot_ms,
@@ -128,6 +131,9 @@ private:
 				q,
 				roll_rate, pitch_rate, yaw_rate,
 				thrust);
+		ROS_INFO_STREAM_NAMED("attitude", "Set Attitude, Q0 =" << q[0] << ", Q1=" << q[1] << ", Q2=" << q[2] << ", Q3=" << q[3]);
+		ROS_INFO_NAMED("attitude", "T=%02x", type_mask);
+
 		UAS_FCU(uas)->send_message(&msg);
 	}
 
@@ -140,7 +146,8 @@ private:
 	 */
 	void send_attitude_transform(const tf::Transform &transform, const ros::Time &stamp) {
 		// Thrust + RPY, also bits noumbering started from 1 in docs
-		const uint8_t ignore_all_except_q = (1<<6)|(7<<0);
+		// const uint8_t ignore_all_except_q = (1<<6)|(7<<0);
+		const uint8_t no_ignore = 0x07;
 		float q[4];
 
 		// ENU->NED, description in #49.
@@ -151,10 +158,10 @@ private:
 		q[3] = -tf_q.z();
 
 		set_attitude_target(stamp.toNSec() / 1000000,
-				ignore_all_except_q,
+				no_ignore,
 				q,
 				0.0, 0.0, 0.0,
-				0.0);
+				throttle);
 	}
 
 	/**
@@ -177,16 +184,18 @@ private:
 	/**
 	 * Send throttle to FCU attitude controller
 	 */
-	void send_attitude_throttle(const float throttle) {
+	void send_attitude_throttle(const float the_throttle) {
 		// Q + RPY
-		const uint8_t ignore_all_except_throttle = (1<<7)|(7<<0);
-		float q[4] = { 1.0, 0.0, 0.0, 0.0 };
+		throttle = the_throttle;
 
-		set_attitude_target(ros::Time::now().toNSec() / 1000000,
-				ignore_all_except_throttle,
-				q,
-				0.0, 0.0, 0.0,
-				throttle);
+//		const uint8_t ignore_all_except_throttle = (1<<7)|(7<<0);
+//		float q[4] = { 1.0, 0.0, 0.0, 0.0 };
+//
+//		set_attitude_target(ros::Time::now().toNSec() / 1000000,
+//				ignore_all_except_throttle,
+//				q,
+//				0.0, 0.0, 0.0,
+//				throttle);
 	}
 
 	/* -*- callbacks -*- */
