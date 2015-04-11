@@ -33,6 +33,7 @@
   <depend>angles</depend>
   <depend>libmavconn</depend>
   <depend>rosconsole_bridge</depend>
+  <depend>brain_box_msgs</depend>
   <exec_depend>python-argparse</exec_depend>
 
   <export>
