@@ -6,25 +6,16 @@
 /*
  * Copyright 2014 Vladimir Ermakov.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
- * for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * This file is part of the mavros package and subject to the license terms
+ * in the top-level LICENSE file of the mavros repository.
+ * https://github.com/mavlink/mavros/tree/master/LICENSE.md
  */
 
 #include <ros/ros.h>
 #include <ros/console.h>
 
 #include <mavros/utils.h>
+#include <mavros/mavlink_diag.h>
 #include <mavconn/interface.h>
 
 #include <mavros/Mavlink.h>
@@ -165,6 +156,8 @@ int main(int argc, char *argv[])
 	ros::NodeHandle priv_nh("~");
 	ros::NodeHandle mavlink_nh("/mavlink");
 	ros::Subscriber mavlink_sub;
+	diagnostic_updater::Updater updater;
+	mavros::MavlinkDiag gcs_link_diag("GCS bridge");
 	image_transport::ImageTransport it(mavlink_nh);
 	image_transport::Subscriber image_sub;
 
@@ -174,6 +167,8 @@ int main(int argc, char *argv[])
 
 	try {
 		gcs_link = MAVConnInterface::open_url(gcs_url);
+		gcs_link_diag.set_mavconn(gcs_link);
+		gcs_link_diag.set_connection_status(true);
 	}
 	catch (mavconn::DeviceError &ex) {
 		ROS_FATAL("GCS: %s", ex.what());
@@ -189,6 +184,17 @@ int main(int argc, char *argv[])
 				.maxDatagramSize(1024));
 
 	image_sub = it.subscribe("gcs_image", 1, image_cb);
+
+	// setup updater
+	updater.setHardwareID(gcs_url);
+	updater.add(gcs_link_diag);
+
+	// updater spinner
+	auto diag_timer = priv_nh.createTimer(ros::Duration(1.0),
+			[&](const ros::TimerEvent &evt) {
+				updater.update();
+			});
+	diag_timer.start();
 
 	ros::spin();
 	return 0;

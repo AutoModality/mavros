@@ -71,6 +71,7 @@ add_message_files(
   OverrideRCIn.msg
   VFR_HUD.msg
   FileEntry.msg
+  ActuatorControl.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -188,6 +189,7 @@ add_library(mavros_plugins
   src/plugins/setpoint_bb_attitude.cpp
   src/plugins/vfr_hud.cpp
   src/plugins/ftp.cpp
+  src/plugins/actuator_control.cpp
 )
 add_dependencies(mavros_plugins
   mavros
@@ -218,6 +220,7 @@ add_dependencies(gcs_bridge
   mavros_generate_messages_cpp
 )
 target_link_libraries(gcs_bridge
+  mavros
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}
 )
