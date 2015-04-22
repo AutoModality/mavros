@@ -19,16 +19,14 @@ class SetpointBBAttitudePlugin : public MavRosPlugin,
 	private TFListenerMixin<SetpointBBAttitudePlugin> {
 public:
 	SetpointBBAttitudePlugin() :
+		sp_nh("~setpoint_bb_attitude"),
 		uas(nullptr),
 		tf_rate(10.0)
 	{ };
 
-	void initialize(UAS &uas_,
-			ros::NodeHandle &nh,
-			diagnostic_updater::Updater &diag_updater)
+	void initialize(UAS &uas_)
 	{
 		uas = &uas_;
-		sp_nh = ros::NodeHandle(nh, "setpoint");
 
 		// may be used to mimic attitude of an object, a gesture, etc.
 		sp_nh.param<std::string>("attitude/frame_id", frame_id, "local_origin");
@@ -38,8 +36,8 @@ public:
 		ROS_DEBUG_NAMED("attitude", "Setpoint attitude topic type: BBPose");
 		att_sub = sp_nh.subscribe("/vstate/pose/setpoint", 10, &SetpointBBAttitudePlugin::pose_cb, this);
 
-		latency_total_pub = nh.advertise<std_msgs::Float64>("/diag/target_track/latency/total", 100);
-		latency_pub = nh.advertise<brain_box_msgs::BBLatency>("/diag/target_track/latency", 100);
+		latency_total_pub = sp_nh.advertise<std_msgs::Float64>("/diag/target_track/latency/total", 100);
+		latency_pub = sp_nh.advertise<brain_box_msgs::BBLatency>("/diag/target_track/latency", 100);
 	}
 
 	const std::string get_name() const {
@@ -165,3 +163,4 @@ private:
 }; // namespace mavplugin
 
 PLUGINLIB_EXPORT_CLASS(mavplugin::SetpointBBAttitudePlugin, mavplugin::MavRosPlugin)
+
