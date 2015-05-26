@@ -98,6 +98,10 @@ private:
 				pitch,
 				yaw);
 		UAS_FCU(uas)->send_message(&msg);
+
+		// send this to gcs as well
+		ROS_INFO("sending to gcs");
+		uas->gcu_link->send_message(&msg);
 	}
 
 	/* -*- mid-level helpers -*- */

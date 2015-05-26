@@ -62,5 +62,8 @@
 	<class name="actuator_control" type="mavplugin::ActuatorControlPlugin" base_class_type="mavplugin::MavRosPlugin">
 		<description>Send direct controls values to the actuators</description>
 	</class>
+	<class name="hil_gps" type="mavplugin::HILGPSPlugin" base_class_type="mavplugin::MavRosPlugin">
+		<description>Send Global Position to FCU</description>
+	</class>
 </library>
 

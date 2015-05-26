@@ -89,6 +89,7 @@ public:
 	 * @brief MAVLink FCU device conection
 	 */
 	mavconn::MAVConnInterface::Ptr fcu_link;
+	mavconn::MAVConnInterface::Ptr gcu_link;
 
 	/**
 	 * @brief Mavros diagnostic updater
