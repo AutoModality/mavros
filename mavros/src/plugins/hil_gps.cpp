@@ -14,6 +14,7 @@
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Float64.h>
 #include <brain_box_msgs/BBPose.h>
+#include <brain_box_msgs/BBGlobalPosition.h>
 
 namespace mavplugin {
 
@@ -33,8 +34,8 @@ public:
 	{
 		uas = &uas_;
 
-		ROS_DEBUG_NAMED("attitude", "Setpoint attitude topic type: BBPose");
-		// gps_sub = hg_nh.subscribe("/sensor/gps/global_position", 10, &HILGPSPlugin::global_position_cb, this);
+		ROS_DEBUG_NAMED("hil_gps", "hil_gps");
+		gps_sub = hg_nh.subscribe("/sensor/gps/global_position", 10, &HILGPSPlugin::global_position_cb, this);
 	}
 
 	const std::string get_name() const {
@@ -51,13 +52,6 @@ private:
 	ros::NodeHandle hg_nh;
 	ros::Subscriber gps_sub;
 
-	std::string frame_id;
-	std::string child_frame_id;
-
-	double tf_rate;
-
-	/* -*- low-level send -*- */
-
 	void hil_gps(uint64_t time_usec,
 			uint32_t lat, uint32_t lon, uint32_t alt, uint16_t eph, uint16_t epv, uint16_t vel,
 			uint16_t vn, uint16_t ve, uint16_t vd, uint16_t cog, uint8_t fix_type, uint8_t satellites_visible)
@@ -71,23 +65,12 @@ private:
 		UAS_FCU(uas)->send_message(&msg);
 	}
 
+	void global_position_cb(const brain_box_msgs::BBGlobalPosition::ConstPtr &req) {
 
-//	void global_position_cb(const brain_box_msgs::BBGLobalPosition::ConstPtr &req) {
-//
-//		hil_gps();
-//	}
-
-	inline bool is_normalized(float throttle, const float min, const float max) {
-		if (throttle < min) {
-			ROS_WARN_NAMED("attitude", "Not normalized throttle! Thd(%f) < Min(%f)", throttle, min);
-			return false;
-		}
-		else if (throttle > max) {
-			ROS_WARN_NAMED("attitude", "Not normalized throttle! Thd(%f) > Max(%f)", throttle, max);
-			return false;
-		}
-
-		return true;
+		hil_gps(req->time_usec, req->lon, req->lat, req->alt,
+				req->eph, req->epv, req->vel,
+				req->vn, req->ve, req->vd, req->cog,
+				req->fix_type, req->satellites_visible);
 	}
 
 };
