@@ -131,8 +131,8 @@ private:
 
 	void pose_cb(const brain_box_msgs::BBPose::ConstPtr &req) {
 		tf::Transform transform;
-		poseMsgToTF(req->pose, transform);
-		send_attitude_transform(transform, req->header.stamp, req->throttle.data);
+		poseMsgToTF(req->pose_throttle.pose, transform);
+		send_attitude_transform(transform, req->header.stamp, req->pose_throttle.throttle.data);
 
 		// send out latency data
 	    ros::Time time = ros::Time::now();
