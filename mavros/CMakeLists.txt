@@ -105,6 +105,7 @@ add_library(mavros_plugins
   src/plugins/setpoint_velocity.cpp
   src/plugins/setpoint_accel.cpp
   src/plugins/setpoint_attitude.cpp
+  src/plugins/setpoint_pt_attitude.cpp
   src/plugins/vfr_hud.cpp
   src/plugins/ftp.cpp
   src/plugins/actuator_control.cpp
