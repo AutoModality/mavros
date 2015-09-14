@@ -18,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
   angles
   libmavconn
   rosconsole_bridge
-  brain_box_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -72,6 +71,7 @@ add_message_files(
   VFR_HUD.msg
   FileEntry.msg
   ActuatorControl.msg
+  PoseThrottle.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -186,7 +186,7 @@ add_library(mavros_plugins
   src/plugins/setpoint_velocity.cpp
   src/plugins/setpoint_accel.cpp
   src/plugins/setpoint_attitude.cpp
-  src/plugins/setpoint_bb_attitude.cpp
+  src/plugins/setpoint_pt_attitude.cpp
   src/plugins/vfr_hud.cpp
   src/plugins/ftp.cpp
   src/plugins/actuator_control.cpp

@@ -6,7 +6,7 @@
 #include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Float64.h>
-#include <brain_box_msgs/BBPose.h>
+#include <mavros/PoseThrottle.h>
 
 namespace mavplugin {
 
@@ -19,7 +19,7 @@ class SetpointBBAttitudePlugin : public MavRosPlugin,
 	private TFListenerMixin<SetpointBBAttitudePlugin> {
 public:
 	SetpointBBAttitudePlugin() :
-		sp_nh("~setpoint_bb_attitude"),
+		sp_nh("~setpoint_attitude"),
 		uas(nullptr),
 		tf_rate(10.0)
 	{ };
@@ -33,11 +33,8 @@ public:
 		sp_nh.param<std::string>("attitude/child_frame_id", child_frame_id, "attitude");
 		sp_nh.param("attitude/tf_rate_limit", tf_rate, 10.0);
 
-		ROS_DEBUG_NAMED("attitude", "Setpoint attitude topic type: BBPose");
-		att_sub = sp_nh.subscribe("/vstate/pose/setpoint", 10, &SetpointBBAttitudePlugin::pose_cb, this);
-
-		latency_total_pub = sp_nh.advertise<std_msgs::Float64>("/diag/target_track/latency/total", 100);
-		latency_pub = sp_nh.advertise<brain_box_msgs::BBLatency>("/diag/target_track/latency", 100);
+		ROS_DEBUG_NAMED("attitude", "Setpoint attitude topic type: PoseThrottle");
+		att_sub = sp_nh.subscribe("pt_attitude", 10, &SetpointBBAttitudePlugin::pose_cb, this);
 	}
 
 	const std::string get_name() const {
@@ -54,8 +51,6 @@ private:
 
 	ros::NodeHandle sp_nh;
 	ros::Subscriber att_sub;
-	ros::Publisher latency_pub;
-	ros::Publisher latency_total_pub;
 
 	std::string frame_id;
 	std::string child_frame_id;
@@ -129,20 +124,10 @@ private:
 
 	/* -*- callbacks -*- */
 
-	void pose_cb(const brain_box_msgs::BBPose::ConstPtr &req) {
+	void pose_cb(const mavros::PoseThrottle::ConstPtr &req) {
 		tf::Transform transform;
-		poseMsgToTF(req->pose_throttle.pose, transform);
-		send_attitude_transform(transform, req->header.stamp, req->pose_throttle.throttle.data);
-
-		// send out latency data
-	    ros::Time time = ros::Time::now();
-		brain_box_msgs::BBLatency latency = req->latency;
-	    latency.mavros_stamp = time;
-        latency_pub.publish(latency);
-		std_msgs::Float64 latency_total;
-		latency_total.data = latency.mavros_stamp.toSec() - req->header.stamp.toSec();
-        latency_total_pub.publish(latency_total);
-
+		poseMsgToTF(req->pose, transform);
+		send_attitude_transform(transform, req->header.stamp, req->throttle.data);
 	}
 
 	inline bool is_normalized(float throttle, const float min, const float max) {
