@@ -26,6 +26,7 @@ add_message_files(
   Vibration.msg
   Waypoint.msg
   WaypointList.msg
+  PoseThrottle.msg
 )
 
 add_service_files(
