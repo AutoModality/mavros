@@ -1,11 +1,8 @@
 #include <mavros/mavros_plugin.h>
 #include <mavros/setpoint_mixin.h>
+#include <mavros_msgs/PoseThrottle.h>
 #include <pluginlib/class_list_macros.h>
 #include <eigen_conversions/eigen_msg.h>
-
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TwistStamped.h>
-#include <std_msgs/Float64.h>
 
 namespace mavplugin {
 /**
@@ -13,38 +10,19 @@ namespace mavplugin {
  *
  * Send setpoint attitude/orientation/thrust to FCU controller.
  */
-class SetpointPTAttitudePlugin : public MavRosPlugin,
-	private TF2ListenerMixin<SetpointPTAttitudePlugin> {
+class SetpointPTAttitudePlugin : public MavRosPlugin {
 public:
 	SetpointPTAttitudePlugin() :
 		sp_nh("~setpoint_attitude"),
-		uas(nullptr),
-		tf_rate(10.0)
+		uas(nullptr)
 	{ };
 
 	void initialize(UAS &uas_)
 	{
-		bool tf_listen;
-
 		uas = &uas_;
 
-		// main params
-		// tf params
-		sp_nh.param("tf/listen", tf_listen, false);
-		sp_nh.param<std::string>("tf/frame_id", tf_frame_id, "local_origin");
-		sp_nh.param<std::string>("tf/child_frame_id", tf_child_frame_id, "attitude");
-		sp_nh.param("tf/rate_limit", tf_rate, 10.0);
-
-		if (tf_listen) {
-			ROS_INFO_STREAM_NAMED("attitude",
-					"Listen to desired attitude transform "
-					<< tf_frame_id << " -> " << tf_child_frame_id);
-			tf2_start("AttitudeSpTF", &SetpointPTAttitudePlugin::transform_cb);
-		}
-		else {
-			pose_sub = sp_nh.subscribe("pt_attitude", 10, &SetpointPTAttitudePlugin::pose_cb, this);
-		}
-
+		pose_sub = sp_nh.subscribe("pt_attitude", 10, &SetpointPTAttitudePlugin::pose_cb, this);
+	
 	}
 
 	const message_map get_rx_handlers() {
@@ -52,15 +30,10 @@ public:
 	}
 
 private:
-	friend class TF2ListenerMixin;
 	ros::NodeHandle sp_nh;
 	UAS *uas;
 
 	ros::Subscriber pose_sub;
-
-	std::string tf_frame_id;
-	std::string tf_child_frame_id;
-	double tf_rate;
 
 	/* -*- low-level send -*- */
 
@@ -107,14 +80,7 @@ private:
 
 	/* -*- callbacks -*- */
 
-	void transform_cb(const geometry_msgs::TransformStamped &transform) {
-		Eigen::Affine3d tr;
-		tf::transformMsgToEigen(transform.transform, tr);
-
-		send_attitude_target(transform.header.stamp, tr);
-	}
-
-	void pose_cb(const mavros::PoseThrottle::ConstPtr &req) {
+	void pose_cb(const mavros_msgs::PoseThrottle::ConstPtr &req) {
 		Eigen::Affine3d tr;
 		tf::poseMsgToEigen(req->pose, tr);
 
